@@ -3,7 +3,7 @@ output "controlplane_machine_configuration" {
 }
 
 output "kubeconfig" {
-  value = data.talos_cluster_kubeconfig.this.kubernetes_client_configuration
+  value = talos_cluster_kubeconfig.this.kubernetes_client_configuration
 }
 
 output "worker_machine_configuration" {
