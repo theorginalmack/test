@@ -21,7 +21,7 @@ variable "controlplane_node_ips" {
 }
 
 variable "kubernetes_version" {
-  default     = "1.35.1"
+  default     = "1.35.3"
   description = "The version of Kubernetes to use for the cluster."
   type        = string
 
@@ -34,12 +34,18 @@ variable "kubernetes_version" {
 variable "talos_version" {
   description = "The version of Talos to use for the cluster."
   type        = string
-  default     = "v1.12.4"
+  default     = "v1.12.6"
 
   validation {
     condition     = can(regex("^v[0-9]+\\.[0-9]+\\.[0-9]+$", var.talos_version))
     error_message = "The Talos version must be a valid version string in the format 'vX.Y.Z' where X, Y, and Z are numbers (e.g., v1.7.6)."
   }
+}
+
+variable "talos_extensions" {
+  default     = ["crun"]
+  description = "Official Talos system extensions to include in the image factory schematic."
+  type        = list(string)
 }
 
 variable "worker_node_ips" {

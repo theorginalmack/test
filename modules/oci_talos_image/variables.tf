@@ -8,3 +8,15 @@ variable "images_bucket" {
   nullable    = false
   type        = string
 }
+
+variable "image_file" {
+  description = "Absolute path to the Oracle image archive to upload."
+  nullable    = false
+  type        = string
+}
+
+variable "talos_version" {
+  description = "Talos version for the uploaded Oracle image."
+  nullable    = false
+  type        = string
+}

@@ -14,6 +14,8 @@ crash.log
 # version control.
 #
 # example.tfvars
+terraform.auto.tfvars
+*.auto.tfvars
 
 # Ignore override files as they are usually used to override resources locally and so
 # are not checked in
@@ -29,7 +31,7 @@ override.tf.json
 # example: *tfplan*
 
 .DS_Store
+__pycache__/
 controlplane.yaml
 talosconfig
 worker.yaml
-oracle-arm64.oci

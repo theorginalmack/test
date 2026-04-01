@@ -104,6 +104,8 @@ module "oci_talos_image" {
 
   compartment_id = oci_identity_compartment.compartment.id
   images_bucket  = var.talos_images_bucket
+  image_file     = abspath("${path.root}/${var.talos_image_file}")
+  talos_version  = var.talos_image_version
 }
 
 resource "oci_network_load_balancer_network_load_balancer" "talos_nlb" {
@@ -121,6 +123,7 @@ module "talos" {
     oci_network_load_balancer_network_load_balancer.talos_nlb.ip_addresses[0]["ip_address"],
   ])
   controlplane_node_ips = module.oci_talos.controlplane_node_ips
+  talos_extensions      = var.talos_extensions
   worker_node_ips       = module.oci_talos.worker_node_ips
 }
 
@@ -167,7 +170,7 @@ resource "helm_release" "cilium" {
   name         = "cilium"
   namespace    = "kube-system"
   repository   = "https://helm.cilium.io"
-  version      = "1.18.7"
+  version      = "1.18.8"
 
   set = [
     {

@@ -1,45 +1,50 @@
 import json
-import os
 import subprocess
+from pathlib import Path
 
-cmd = ["terraform", "state", "pull"]
-output = subprocess.run(cmd, check=True, stdout=subprocess.PIPE).stdout
-state = json.loads(output)
+terraform_output = subprocess.run(
+    ["terraform", "output", "-json"],
+    check=True,
+    stdout=subprocess.PIPE,
+).stdout
 
-resources = state.pop("resources")
+outputs = json.loads(terraform_output)
 
-machine_configuration = {"controlplane": "", "worker": ""}
+machine_configuration = {
+    "controlplane": outputs["controlplane_machine_configuration"]["value"],
+    "worker": outputs["worker_machine_configuration"]["value"],
+}
+talosconfig = outputs["talosconfig"]["value"]
 
-TALOSCONFIG = ""
+dir_path = Path.home() / ".talos"
+config_file_path = dir_path / "config"
 
-for resource in resources:
-    if resource["type"] == "talos_client_configuration":
-        TALOSCONFIG = resource["instances"][0]["attributes"]["talos_config"]
-    elif resource["type"] == "talos_machine_configuration":
-        machine_configuration[resource["name"]] = resource["instances"][0][
-            "attributes"
-        ]["machine_configuration"]
+dir_path.mkdir(parents=True, exist_ok=True)
+config_file_path.write_text(talosconfig)
 
-dir_path = os.path.expanduser("~/.talos/")
-config_file_path = os.path.join(dir_path, "config")
-
-os.makedirs(dir_path, exist_ok=True)
-
-with open(config_file_path, "w") as f:
-    f.write(TALOSCONFIG)
-
-lines = TALOSCONFIG.splitlines()
-FIRST_ENDPOINT = None
+lines = talosconfig.splitlines()
+first_endpoint = None
 
 for i, line in enumerate(lines):
     if "endpoints:" in line:
-        FIRST_ENDPOINT = lines[i + 1].strip().lstrip("- ")
+        first_endpoint = lines[i + 1].strip().lstrip("- ")
         break
 
-os.system(f"talosctl kubeconfig --force -n {FIRST_ENDPOINT}")
+if first_endpoint is None:
+    raise RuntimeError("Failed to find the first Talos endpoint in talosconfig")
 
-with open("talosconfig", "w") as f:
-    f.write(TALOSCONFIG)
+subprocess.run(
+    [
+        "talosctl",
+        "kubeconfig",
+        "--force",
+        "-n",
+        first_endpoint,
+    ],
+    check=True,
+)
+
+Path("talosconfig").write_text(talosconfig)
 
 with open("controlplane.yaml", "w") as f:
     f.write(machine_configuration["controlplane"])
